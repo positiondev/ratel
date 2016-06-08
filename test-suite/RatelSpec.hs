@@ -2,7 +2,7 @@ module RatelSpec (spec) where
 
 import qualified Control.Exception as Exception
 import qualified Ratel
-import Test.Tasty.Hspec
+import           Test.Tasty.Hspec
 
 spec :: Spec
 spec = describe "Ratel" $ do
@@ -27,7 +27,7 @@ spec = describe "Ratel" $ do
                                     , Ratel.traceNumber = Just "16:34"
                                     }
                                 ]
-                            , Ratel.errorClass = Just "SomeException"
+                            , Ratel.errorClass = Just "something went wrong"
                             , Ratel.errorMessage = Just "something went wrong"
                             , Ratel.errorSource = Nothing
                             , Ratel.errorTags = Nothing

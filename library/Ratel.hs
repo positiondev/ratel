@@ -2,23 +2,23 @@
 
 module Ratel where
 
-import qualified Control.Exception as Exception
-import qualified Data.Aeson as JSON
-import qualified Data.Aeson.Types as JSON
-import qualified Data.ByteString.Char8 as BS
-import qualified Data.CaseInsensitive as CI
-import qualified Data.List as List
-import qualified Data.Map as Map
-import qualified Data.Text as Text
-import qualified Data.Typeable as Typeable
-import qualified Data.UUID as UUID
-import qualified Data.Version as Version
-import qualified GHC.SrcLoc as SrcLoc
-import qualified GHC.Stack as Stack
-import qualified Network.HTTP.Client as Client
+import qualified Control.Exception       as Exception
+import qualified Data.Aeson              as JSON
+import qualified Data.Aeson.Types        as JSON
+import qualified Data.ByteString.Char8   as BS
+import qualified Data.CaseInsensitive    as CI
+import qualified Data.List               as List
+import qualified Data.Map                as Map
+import qualified Data.Text               as Text
+import qualified Data.Typeable           as Typeable
+import qualified Data.UUID               as UUID
+import qualified Data.Version            as Version
+import qualified GHC.SrcLoc              as SrcLoc
+import qualified GHC.Stack               as Stack
+import qualified Network.HTTP.Client     as Client
 import qualified Network.HTTP.Client.TLS as Client
-import qualified Network.HTTP.Types as HTTP
-import qualified Paths_ratel as This
+import qualified Network.HTTP.Types      as HTTP
+import qualified Paths_ratel             as This
 
 
 notify :: ApiKey -> Maybe Client.Manager -> Payload -> IO UUID.UUID
@@ -59,12 +59,11 @@ notify apiKey maybeManager initialPayload = do
 toError :: (?callStack :: Stack.CallStack) => Exception.SomeException -> Error
 toError exception = Error
     { errorBacktrace = Just (toTraces ?callStack)
-    , errorClass = Just (show (Typeable.typeOf exception))
+    , errorClass =  Just (Exception.displayException exception)
     , errorMessage = Just (Exception.displayException exception)
     , errorSource = Nothing
     , errorTags = Nothing
     }
-
 
 toTraces :: Stack.CallStack -> [Trace]
 toTraces callStack = map (uncurry toTrace) (Stack.getCallStack callStack)
@@ -88,10 +87,10 @@ type ApiKey = String
 
 
 data Payload = Payload
-    { payloadError :: Error
+    { payloadError    :: Error
     , payloadNotifier :: Maybe Notifier
-    , payloadRequest :: Maybe Request
-    , payloadServer :: Server
+    , payloadRequest  :: Maybe Request
+    , payloadServer   :: Server
     } deriving (Eq, Show)
 
 instance JSON.ToJSON Payload where
@@ -105,10 +104,10 @@ instance JSON.ToJSON Payload where
 
 data Error = Error
     { errorBacktrace :: Maybe [Trace]
-    , errorClass :: Maybe String
-    , errorMessage :: Maybe String
-    , errorSource :: Maybe (Map.Map String String)
-    , errorTags :: Maybe [String]
+    , errorClass     :: Maybe String
+    , errorMessage   :: Maybe String
+    , errorSource    :: Maybe (Map.Map String String)
+    , errorTags      :: Maybe [String]
     } deriving (Eq, Show)
 
 instance JSON.ToJSON Error where
@@ -122,8 +121,8 @@ instance JSON.ToJSON Error where
 
 
 data Notifier = Notifier
-    { notifierName :: Maybe String
-    , notifierUrl :: Maybe String
+    { notifierName    :: Maybe String
+    , notifierUrl     :: Maybe String
     , notifierVersion :: Maybe String
     } deriving (Eq, Show)
 
@@ -136,13 +135,13 @@ instance JSON.ToJSON Notifier where
 
 
 data Request = Request
-    { requestAction :: Maybe String
-    , requestCgiData :: Maybe (Map.Map String String)
+    { requestAction    :: Maybe String
+    , requestCgiData   :: Maybe (Map.Map String String)
     , requestComponent :: Maybe String
-    , requestContext :: Maybe (Map.Map String JSON.Value)
-    , requestParams :: Maybe (Map.Map String String)
-    , requestSession :: Maybe (Map.Map String String)
-    , requestUrl :: Maybe String
+    , requestContext   :: Maybe (Map.Map String JSON.Value)
+    , requestParams    :: Maybe (Map.Map String String)
+    , requestSession   :: Maybe (Map.Map String String)
+    , requestUrl       :: Maybe String
     } deriving (Eq, Show)
 
 instance JSON.ToJSON Request where
@@ -159,8 +158,8 @@ instance JSON.ToJSON Request where
 
 data Server = Server
     { serverEnvironmentName :: Maybe String
-    , serverHostname :: Maybe String
-    , serverProjectRoot :: Maybe Project
+    , serverHostname        :: Maybe String
+    , serverProjectRoot     :: Maybe Project
     } deriving (Eq, Show)
 
 instance JSON.ToJSON Server where
@@ -172,7 +171,7 @@ instance JSON.ToJSON Server where
 
 
 data Trace = Trace
-    { traceFile :: Maybe String
+    { traceFile   :: Maybe String
     , traceMethod :: Maybe String
     , traceNumber :: Maybe String
     } deriving (Eq, Show)
