@@ -1,21 +1,21 @@
 {-# LANGUAGE ImplicitParams #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Ratel where
 
-import qualified Control.Exception       as Exception
-import qualified Data.Aeson              as JSON
-import qualified Data.Aeson.Types        as JSON
-import qualified Data.ByteString.Char8   as BS
-import qualified Data.CaseInsensitive    as CI
-import qualified Data.List               as List
-import qualified Data.Map                as Map
-import qualified Data.Text               as Text
-import qualified Data.Typeable           as Typeable
-import qualified Data.UUID               as UUID
-import qualified Data.Version            as Version
-import qualified GHC.SrcLoc              as SrcLoc
-import qualified GHC.Stack               as Stack
-import qualified Network.HTTP.Client     as Client
+import qualified Control.Exception as Exception
+import qualified Data.Aeson as JSON
+import qualified Data.Aeson.Types as JSON
+import qualified Data.ByteString.Char8 as BS
+import qualified Data.CaseInsensitive as CI
+import qualified Data.List as List
+import qualified Data.Map as Map
+import qualified Data.Text as Text
+import qualified Data.Typeable as Typeable
+import qualified Data.UUID as UUID
+import qualified Data.Version as Version
+import qualified GHC.Stack as Stack
+import qualified Network.HTTP.Client as Client
 import qualified Network.HTTP.Client.TLS as Client
 import qualified Network.HTTP.Types      as HTTP
 import qualified Paths_ratel             as This
@@ -32,7 +32,7 @@ notify apiKey maybeManager initialPayload = do
             Nothing -> initialPayload { payloadNotifier = Just notifier }
             _ -> initialPayload
 
-    initialRequest <- Client.parseUrl "https://api.honeybadger.io/v1/notices"
+    initialRequest <- Client.parseUrlThrow "https://api.honeybadger.io/v1/notices"
     let body = Client.RequestBodyLBS (JSON.encode payload)
     let headers =
             [ (HTTP.hAccept, BS.pack "application/json")
@@ -59,26 +59,32 @@ notify apiKey maybeManager initialPayload = do
 toError :: (?callStack :: Stack.CallStack) => Exception.SomeException -> Error
 toError exception = Error
     { errorBacktrace = Just (toTraces ?callStack)
-    , errorClass =  Just (Exception.displayException exception)
+    , errorClass = Just $ concat [ show (Typeable.typeOf exception)
+                                 , ": "
+                                 , (take 30 . takeUntilNewline) (Exception.displayException exception)]
     , errorMessage = Just (Exception.displayException exception)
     , errorSource = Nothing
     , errorTags = Nothing
     }
 
+takeUntilNewline :: String -> String
+takeUntilNewline s =
+  Text.unpack $ fst $ Text.breakOn "\n" $ Text.pack s
+
 toTraces :: Stack.CallStack -> [Trace]
 toTraces callStack = map (uncurry toTrace) (Stack.getCallStack callStack)
 
 
-toTrace :: String -> SrcLoc.SrcLoc -> Trace
+toTrace :: String -> Stack.SrcLoc -> Trace
 toTrace function srcLoc = Trace
-    { traceFile = Just (SrcLoc.srcLocFile srcLoc)
+    { traceFile = Just (Stack.srcLocFile srcLoc)
     , traceMethod = Just (List.intercalate "."
-        [ SrcLoc.srcLocModule srcLoc
+        [ Stack.srcLocModule srcLoc
         , function
         ])
     , traceNumber = Just (List.intercalate ":" (map show
-        [ SrcLoc.srcLocStartLine srcLoc
-        , SrcLoc.srcLocStartCol srcLoc
+        [ Stack.srcLocStartLine srcLoc
+        , Stack.srcLocStartCol srcLoc
         ]))
     }
 
