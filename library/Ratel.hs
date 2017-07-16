@@ -1,4 +1,5 @@
 {-# LANGUAGE ImplicitParams #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Ratel where
 
@@ -54,16 +55,16 @@ notify apiKey maybeManager initialPayload = do
         Left message -> fail message
         Right notice -> return (unwrapNoticeUuid (noticeUuid notice))
 
-
-toError :: (?callStack :: Stack.CallStack) => Exception.SomeException -> Error
+toError :: (Exception.Exception exception, Stack.HasCallStack) => exception -> Error
 toError exception = Error
     { errorBacktrace = Just (toTraces ?callStack)
-    , errorClass = Just (show (Typeable.typeOf exception))
+    , errorClass = Just $ concat [ show (Typeable.typeOf exception)
+                                 , ": "
+                                 , (take 30 . takeWhile (/= '\n')) (Exception.displayException exception)]
     , errorMessage = Just (Exception.displayException exception)
     , errorSource = Nothing
     , errorTags = Nothing
     }
-
 
 toTraces :: Stack.CallStack -> [Trace]
 toTraces callStack = map (uncurry toTrace) (Stack.getCallStack callStack)
